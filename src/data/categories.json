@@ -1,0 +1,12 @@
+[
+	{
+		"id": 1,
+		"name": "beverage",
+		"description": "This category includes tea,coffee,liquor,beer,milk and soft drinks"
+	},
+	{
+		"id": 2,
+		"name": "cereals",
+		"description": "breakfast cereals includes wheat,rice,maize,millet and the likes"
+	}
+]
