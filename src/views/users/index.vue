@@ -8,11 +8,19 @@
 				<v-container fluid style="width: 60%">
 					<div>
 						<v-text-field
-							label="Name"
+							label="Firstame"
 							outlined
 							dense
-							v-model="user.name"
+							v-model="user.firstname"
 						></v-text-field>
+					</div>
+					<div>
+						<v-text-field
+							label="Lastname"
+							v-model="user.lastname"
+							outlined
+							dense
+						/>
 					</div>
 					<div>
 						<v-text-field
@@ -21,12 +29,9 @@
 							outlined
 							dense
 						/>
-						<v-text-field
-							label="Password"
-							v-model="user.password"
-							outlined
-							dense
-						/>
+					</div>
+					<div>
+						<v-text-field label="Phone" v-model="user.phone" outlined dense />
 					</div>
 					<v-btn color="success" @click="save()">Save Settings</v-btn>
 					<v-divider class="mt-10 mb-5" />
@@ -41,7 +46,7 @@
 						<v-text-field label="Confirm new password" outlined dense />
 					</div>
 					<div>
-						<v-btn color="success">Save Password</v-btn>
+						<v-btn color="success" @click="save()">Save Password</v-btn>
 					</div>
 				</v-container>
 			</v-card-text>
@@ -53,18 +58,13 @@
 	export default {
 		data() {
 			return {
-				user: {
-					name: '',
-					password: '',
-					username: '',
-				},
+				user: this.$store.state.currentUser,
 			};
 		},
 
 		methods: {
 			save() {
-				window.localStorage.setItem('3', JSON.stringify(this.user));
-				console.log('saved');
+				console.log(this.user);
 			},
 		},
 	};

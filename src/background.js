@@ -51,7 +51,7 @@ async function createWindow() {
 		width: 800,
 		height: 600,
 		frame: false,
-		// fullscreen: true,
+		fullscreen: true,
 		webPreferences: {
 			// Use pluginOptions.nodeIntegration, leave this alone
 			// See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -132,18 +132,11 @@ ipcMain.on('minimize', () => {
 ipcMain.on('toggle-maximize', (_, isMaximize) => {
 	if (isMaximize == true) {
 		win.maximize();
-		// win.getFocusedWindow().maximize();
 	} else {
 		win.unmaximize();
-		// win.getFocusedWindow().unmaximize();
 	}
 });
-// ipcMain.on('unmaximize', () => {
-// 	win.unmaximize();
-// });
-// ipcMain.on('ismaximized', () => {
-// 	win.isMaximized();
-// });
+
 ipcMain.on('close', () => {
 	win.destroy();
 });
@@ -157,8 +150,10 @@ ipcMain.handle('user:login', async (_, user) => {
 	}
 });
 ipcMain.handle('user:create', saveData);
-
+ipcMain.handle('user:update', updateData);
+ipcMain.handle('user:delete', deleteData);
 ipcMain.handle('users:load', loadData);
+
 ipcMain.on('users:loadtotal', async (event, users) => {
 	try {
 		const u = await User.getAll();
@@ -188,11 +183,19 @@ if (isDevelopment) {
 	}
 }
 
-async function saveData(event, data) {
+async function saveData(_, data) {
 	try {
 		// console.log(data);
-		await User.insert(data);
-		return { message: 'success' };
+		const user = await User.insert(data);
+		return user;
+	} catch (e) {
+		console.log(e.message);
+	}
+}
+async function updateData(_, data) {
+	try {
+		let user = await User.update(data);
+		return user;
 	} catch (e) {
 		console.log(e.message);
 	}
@@ -205,5 +208,17 @@ async function loadData(_, data) {
 		return data;
 	} catch (error) {
 		console.log(error.message);
+		return error.message;
+	}
+}
+
+async function deleteData(_, data) {
+	try {
+		const res = await User.delete(data);
+		console.log(res);
+		return res;
+	} catch (error) {
+		console.log(error.message);
+		return error.message;
 	}
 }

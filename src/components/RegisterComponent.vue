@@ -120,6 +120,7 @@
 
 		data() {
 			return {
+				pushToSessionStorage: true,
 				formIsValid: true,
 				showPassword: false,
 				apiRequest: false,
@@ -210,7 +211,10 @@
 				if (this.$v.$invalid) {
 					return false;
 				} else {
-					this.$store.dispatch('registerUser', this.user);
+					this.$store.dispatch('registerUser', {
+						user: this.user,
+						pushToSessionStorage: this.pushToSessionStorage,
+					});
 				}
 			},
 		},

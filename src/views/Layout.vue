@@ -26,16 +26,8 @@
 				users: [],
 			};
 		},
-		created() {
-			this.fetchUsers();
-		},
-		methods: {
-			async fetchUsers() {
-				this.users = await this.$store.dispatch('fetchUsers');
-				// console.log('****printing users ****');
-				console.log(this.users);
-			},
-		},
+		created() {},
+		methods: {},
 	};
 </script>
 

@@ -24,7 +24,76 @@
 							>
 							<v-divider class="mx-5" inset vertical></v-divider>
 							<v-spacer></v-spacer>
+							<v-dialog v-model="dialogEdit" max-width="500px">
+								<v-card>
+									<v-card-title> Edit User </v-card-title>
 
+									<v-container>
+										<v-row dense>
+											<v-col cols="12">
+												<v-text-field
+													v-model="editedItem.firstname"
+													outlined
+													dense
+													color="teal darken-4"
+													label=" Firstname"
+													@input="$v.editedItem.firstname.$touch()"
+													@blur="$v.editedItem.firstname.$touch()"
+													:error-messages="firstnameErrors"
+												/>
+											</v-col>
+											<v-col cols="12">
+												<v-text-field
+													v-model="editedItem.lastname"
+													color="teal darken-4"
+													outlined
+													dense
+													label=" Lastname"
+													@input="$v.editedItem.lastname.$touch()"
+													@blur="$v.editedItem.lastname.$touch()"
+													:error-messages="lastnameErrors"
+												/>
+											</v-col>
+											<v-col cols="12">
+												<v-text-field
+													v-model="editedItem.phone"
+													color="teal darken-4"
+													type="number"
+													outlined
+													dense
+													label="Phone"
+													@input="$v.editedItem.phone.$touch()"
+													@blur="$v.editedItem.phone.$touch()"
+													:error-messages="phoneErrors"
+												/>
+											</v-col>
+											<v-select
+												:items="roles"
+												label="Select role"
+												color="teal darken-4"
+												dense
+												outlined
+												v-model="editedItem.role"
+											></v-select>
+										</v-row>
+										<v-card-actions>
+											<v-spacer></v-spacer>
+											<v-btn
+												color="red darken-1"
+												class="white--text"
+												@click="closeEdit"
+												>Cancel</v-btn
+											>
+											<v-btn
+												color="teal darken-1"
+												class="white--text"
+												@click="editUser(editedItem)"
+												>Save</v-btn
+											>
+										</v-card-actions>
+									</v-container>
+								</v-card>
+							</v-dialog>
 							<v-dialog v-model="dialog" max-width="500px">
 								<template v-slot:activator="{ on }">
 									<v-btn class="mb-2 teal--text" color="white" v-on="on">
@@ -161,7 +230,7 @@
 									</v-card-actions>
 								</v-card>
 							</v-dialog>
-							<v-dialog v-model="dialogDelete" max-width="500px">
+							<v-dialog v-model="dialogDelete" max-width="400px">
 								<v-card>
 									<v-card-title class="headline"
 										>Are you sure you want to delete this <br />
@@ -185,7 +254,15 @@
 					</template>
 
 					<template v-slot:[`item.actions`]="{ item }">
-						<v-icon small color="red darken-2" @click="deleteItem(item)">
+						<v-icon small color="teal darken-2" @click="editItem(item)">
+							mdi-pencil
+						</v-icon>
+						<v-icon
+							class="ml-2"
+							small
+							color="red darken-2"
+							@click="deleteItem(item)"
+						>
 							mdi-delete
 						</v-icon>
 					</template>
@@ -212,24 +289,33 @@
 	export default {
 		data() {
 			return {
+				pushToSessionStorage: false,
 				pro: [],
 				users: this.$store.state.users,
 				dialog: false,
 				dialogDelete: false,
+				dialogEdit: false,
 				valid: false,
 				showPassword: false,
 
 				headers: [
 					{
-						text: 'Name',
+						text: 'Firstame',
 						align: 'left',
 						sortable: true,
-						value: 'fullname',
+						value: 'firstname',
+					},
+					{
+						text: 'Lastame',
+						align: 'left',
+						sortable: true,
+						value: 'lastname',
 					},
 					{ text: 'Username', value: 'username' },
 					{ text: 'Phone', value: 'phone' },
 					{ text: 'Role', value: 'role' },
-					{ text: 'Date Created', value: 'date' },
+					{ text: 'Date Created', value: 'date_created' },
+					{ text: 'Date Modified', value: 'date_modified' },
 
 					{
 						text: 'Actions',
@@ -248,7 +334,8 @@
 					role: '',
 					password: '',
 					confirm_password: '',
-					date: '',
+					date_created: moment().format('DD-MM-YYYY'),
+					date_modified: moment().format('DD-MM-YYYY'),
 				},
 				defaultItem: {
 					firstname: '',
@@ -258,7 +345,6 @@
 					role: '',
 					password: '',
 					confirm_password: '',
-					date: '',
 				},
 			};
 		},
@@ -275,9 +361,9 @@
 					async uniqueUsername(value) {
 						if (value == '') return true;
 
-						let users = this.$store.state.users;
+						let users = await this.users;
 						console.log(users);
-						const username_AlreadyExist = users.find(
+						const username_AlreadyExist = await users.find(
 							(user) => user.username.toLowerCase() === value.toLowerCase()
 						);
 						if (username_AlreadyExist) {
@@ -334,7 +420,7 @@
 			usernameErrors() {
 				const errors = [];
 				if (!this.$v.editedItem.username.$dirty) return errors;
-				!this.$v.editedItem.username.uniquePhone &&
+				!this.$v.editedItem.username.uniqueUsername &&
 					errors.push('Username already exist*');
 				!this.$v.editedItem.username.required &&
 					errors.push('Username is required*');
@@ -387,15 +473,20 @@
 			dialogDelete(val) {
 				val || this.closeDelete();
 			},
+			dialogEdit(val) {
+				val || this.closeDelete();
+			},
 		},
 
 		created() {
 			this.$store.dispatch('fetchProducts');
+			this.fetchUsers();
 		},
 		methods: {
-			saveUser(data) {
-				data.date = moment().format('DD-MM-YYYY');
-				this.$store.dispatch('saveUser', data);
+			async fetchUsers() {
+				this.users = await this.$store.dispatch('fetchUsers');
+				// console.log('****printing users ****');
+				console.log(this.users);
 			},
 
 			deleteItem(item) {
@@ -403,10 +494,17 @@
 				this.editedItem = Object.assign({}, item);
 				this.dialogDelete = true;
 			},
+			editItem(item) {
+				this.editedIndex = this.users.indexOf(item);
+				this.editedItem = Object.assign({}, item);
+				this.dialogEdit = true;
+			},
 
 			deleteItemConfirm() {
 				this.users.splice(this.editedIndex, 1);
 				// ipcRenderer.send('users:delete', this.editedItem.id);
+				this.$store.dispatch('deleteUser', this.editedItem.id);
+				console.log(this.editedItem.id);
 				this.closeDelete();
 			},
 
@@ -425,28 +523,50 @@
 					this.editedIndex = -1;
 				});
 			},
+			closeEdit() {
+				this.dialogEdit = false;
+				this.$nextTick(() => {
+					this.editedItem = Object.assign({}, this.defaultItem);
+					this.editedIndex = -1;
+				});
+			},
 
 			async save() {
 				this.$v.$touch();
 				if (!this.$v.$invalid) {
-					this.users.unshift(this.editedItem);
-					this.saveUser(this.editedItem);
+					const res = await this.$store.dispatch('registerUser', {
+						user: this.editedItem,
+						pushToSessionStorage: this.pushToSessionStorage,
+					});
+
+					this.users.unshift(res);
+					this.$nextTick(() => {
+						this.$v.$reset();
+					});
 				}
+
 				this.close();
 			},
-			clearForm() {
-				this.$v.reset;
-				this.editedItem.name = '';
-				this.editedItem.username = '';
-				this.editedItem.role = '';
-				this.editedItem.phone = '';
+
+			async editUser(user) {
+				await this.$store.dispatch('editUser', this.editedItem);
+
+				await this.users.find((u, index) => {
+					if (u.id == user.id) {
+						Object.assign(this.users[index], this.editedItem);
+					}
+				});
+				this.closeEdit();
 			},
 		},
 	};
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 	.v-data-table table tr:nth-of-type(2n) {
 		background: lightslategrey;
+	}
+	.v-data-table tbody tr:not(:last-child) {
+		border-bottom: 1px solid rgba(0, 0, 0, 0.12) !important;
 	}
 </style>

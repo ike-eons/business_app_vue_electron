@@ -44,6 +44,17 @@ export default new Vuex.Store({
 			let users = state.users.push(user);
 			state.users = users;
 		},
+		EDIT_USER(state, user) {
+			state.users.forEach((u) => {
+				if (u.id == user.id) {
+					u = user;
+				}
+			});
+		},
+		DELETE_USER(state, user) {
+			let users = state.users.filter((u) => u.id !== user);
+			state.users = users;
+		},
 		SET_ERROR(state, error) {
 			state.error = error;
 		},
@@ -104,36 +115,46 @@ export default new Vuex.Store({
 			router.replace({ name: 'Logout' });
 		},
 
-		async registerUser({ commit }, user) {
-			try {
-				console.log(user);
-				let data = window.API.userCreate(user);
-				if (data.error || undefined) {
-					console.log(`reporting error: ${data.error}`);
-					commit('SET_ERROR', data.error);
-				} else {
-					commit('SET_CURRENT_USER', user);
-					router.replace({ name: 'Layout' });
-					return data;
-				}
-			} catch (e) {
-				console.log(e);
-			}
-		},
-		async saveUser({ commit }, user) {
+		async registerUser({ commit }, { user, pushToSessionStorage }) {
 			try {
 				let data = await window.API.userCreate(user);
 				if (data.error || undefined) {
 					console.log(`reporting error: ${data.error}`);
 					commit('SET_ERROR', data.error);
 				} else {
-					commit('ADD_USER', user);
-					// router.push({ name: 'Settings' });
-					console.log('in saveUsers');
+					console.log(`vuex data`);
+					console.log(data);
+					console.log(`vuex data`);
+					if (pushToSessionStorage == true) {
+						commit('SET_CURRENT_USER', data);
+						router.replace({ name: 'Layout' });
+					}
 					return data;
 				}
 			} catch (e) {
 				console.log(e);
+			}
+		},
+
+		async editUser({ commit }, user) {
+			let data = await window.API.userUpdate(user);
+			console.log(data);
+			if (data == data.error || data == undefined) {
+				console.log(`reporting error`);
+				// commit('SET_ERROR', data.error | undefined);
+			} else {
+				commit('EDIT_USER', user);
+				return user;
+			}
+		},
+		async deleteUser({ commit }, user) {
+			let res = await window.API.userDelete(user);
+			console.log(res);
+			if (res.message == 'deleted') {
+				commit('DELETE_USER', user);
+				return res;
+			} else {
+				return res.error.message;
 			}
 		},
 	},

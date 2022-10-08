@@ -4,12 +4,13 @@
 			<SystemBar />
 		</div>
 
-		<div class="auth-card" v-if="get_total_user > 0">
+		<!-- <div class="auth-card" v-if="get_total_user > 0">
 			<LoginComponent :user="user" />
 		</div>
 		<div class="auth-card" v-else>
 			<RegisterComponent :user="user" />
-		</div>
+		</div> -->
+		<component :user="user" :is="dynamicComponent"></component>
 	</v-app>
 </template>
 
@@ -35,14 +36,20 @@
 					password: '',
 					confirm_password: '',
 					role: 'admin',
-					date: moment().format('DD-MM-YYYY'),
+					date_created: moment().format('DD-MM-YYYY'),
+					date_modified: moment().format('DD-MM-YYYY'),
 				},
 			};
 		},
 
 		computed: {
-			get_total_user() {
-				return this.$store.getters.GET_LENGTH_OF_USERS;
+			dynamicComponent() {
+				// return this.$store.getters.GET_LENGTH_OF_USERS;
+				if (this.$store.getters.GET_LENGTH_OF_USERS > 0) {
+					return 'LoginComponent';
+				} else {
+					return 'RegisterComponent';
+				}
 			},
 		},
 		created() {

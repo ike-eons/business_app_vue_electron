@@ -3,10 +3,24 @@ import { db } from './db_connection';
 const bcrypt = require('bcryptjs');
 
 class User {
-	constructor(name, username, role, phone, password, date) {
-		(this.name = name), (this.username = username), (this.role = role);
-		(this.phone = phone), (this.password = password);
-		this.date = date;
+	constructor(
+		firstname,
+		lastname,
+		username,
+		role,
+		phone,
+		password,
+		date_created,
+		date_modified
+	) {
+		this.firstname = firstname;
+		this.lastname = lastname;
+		this.username = username;
+		this.role = role;
+		this.phone = phone;
+		this.password = password;
+		this.date_created = date_created;
+		this.date_modified = date_modified;
 	}
 
 	static async createTable() {
@@ -18,7 +32,8 @@ class User {
 			role TEXT,
             phone TEXT,
             password TEXT,
-			date TEXT
+			date_created TEXT,
+			date_modified TEXT
             )`;
 		console.log('users table created');
 		return db.run(sql);
@@ -30,7 +45,7 @@ class User {
 		}
 		const res = await db.run(
 			` INSERT INTO users
-			 VALUES(?,?,?,?,?,?,?,?) `,
+			 VALUES(?,?,?,?,?,?,?,?,?) `,
 			[
 				this.lastID,
 				user.firstname,
@@ -39,16 +54,13 @@ class User {
 				user.role,
 				user.phone,
 				user.password,
-				user.date,
-			],
-			function (err) {
-				if (err) {
-					reject({ error: err.message });
-				}
-				resolve(this.lastID);
-			}
+				user.date_created,
+				user.date_modified,
+			]
 		);
-		return res;
+
+		const data = await db.get(`SELECT * FROM users where id=?`, res);
+		return data;
 	}
 	static async loginUser(user) {
 		console.log(user.username);
@@ -78,23 +90,33 @@ class User {
 		});
 	}
 
-	static getLastId() {
-		const res = db.get(
-			`SELECT id FROM users ORDER BY id desc limit 1`,
-			[],
-			(err, row) => {
-				if (err) {
-					return console.log(err);
-				}
-				return console.log(row);
-			}
-		);
+	static getLastId(user) {
+		const res = db.get(`SELECT * FROM users where id=?`, user.id);
 		return res;
 	}
 
-	static delete(id) {
-		db.run(`DELETE FROM users WHERE id = ${id}`);
-		return console.log('item deleted');
+	static async delete(id) {
+		await db.run(`DELETE FROM users WHERE id = ${id}`);
+		return { message: 'deleted' };
+	}
+	static async update(user) {
+		const res = await db.update(
+			`UPDATE users SET firstname=?, lastname=?,username=?,
+		role=?,phone=?,password=?,date_created=?,date_modified=? WHERE id=?`,
+			[
+				user.firstname,
+				user.lastname,
+				user.username,
+				user.role,
+				user.phone,
+				user.password,
+				user.date_created,
+				user.date_modified,
+				user.id,
+			]
+		);
+		console.log(`-----changes:update:${res}`);
+		return res;
 	}
 }
 

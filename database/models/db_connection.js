@@ -31,7 +31,7 @@ class DatabaseConnection {
 
 	run(sql, params) {
 		return new Promise((resolve, reject) => {
-			this.sqlitedb.run(sql, params, (err) => {
+			this.sqlitedb.run(sql, params, function (err) {
 				if (err) {
 					console.log('Error running sql' + sql);
 					return reject({
@@ -45,10 +45,26 @@ class DatabaseConnection {
 			});
 		});
 	}
+	update(sql, params) {
+		return new Promise((resolve, reject) => {
+			this.sqlitedb.run(sql, params, function (err) {
+				if (err) {
+					console.log('Error running sql' + sql);
+					return reject({
+						error: err.name,
+						message: err.message,
+						stack: err.stack,
+						user_message: 'somthing went wrong',
+					});
+				}
+				return resolve(this.changes);
+			});
+		});
+	}
 
 	get(sql, params) {
 		return new Promise((resolve, reject) => {
-			this.sqlitedb.get(sql, params, (err, row) => {
+			this.sqlitedb.get(sql, params, function (err, row) {
 				if (err) {
 					return reject(err);
 				}
@@ -59,7 +75,7 @@ class DatabaseConnection {
 
 	all(sql, params) {
 		return new Promise((resolve, reject) => {
-			this.sqlitedb.all(sql, params, (err, rows) => {
+			this.sqlitedb.all(sql, params, function (err, rows) {
 				if (err) {
 					return reject(err);
 				}
